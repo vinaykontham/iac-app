@@ -11,6 +11,7 @@ import { ArrowLeft, Rocket, CheckCircle, AlertTriangle, Loader2, Eye } from "luc
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { firestore, isDemoMode } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import DemoServices from "@/components/DemoServices";
 
 interface Props {
   data: WizardData;
@@ -23,9 +24,16 @@ const ReviewDeployStep: React.FC<Props> = ({ data, prevStep }) => {
   const [deploying, setDeploying] = useState(false);
   const [deploymentStatus, setDeploymentStatus] = useState<"idle" | "success" | "error">("idle");
   const [deploymentId, setDeploymentId] = useState<string>("");
+  const [showDemoServices, setShowDemoServices] = useState(false);
 
   const handleDeploy = async () => {
     if (!user) return;
+
+    // If dry run mode, show demo services instead of deploying
+    if (data.dryRun) {
+      setShowDemoServices(true);
+      return;
+    }
 
     setDeploying(true);
     setDeploymentStatus("idle");
@@ -339,11 +347,19 @@ const ReviewDeployStep: React.FC<Props> = ({ data, prevStep }) => {
           ) : (
             <>
               {data.dryRun ? <Eye className="w-4 h-4 mr-2" /> : <Rocket className="w-4 h-4 mr-2" />}
-              {data.dryRun ? "Run Dry Run" : "Deploy Infrastructure"}
+              {data.dryRun ? "Preview Resources" : "Deploy Infrastructure"}
             </>
           )}
         </Button>
       </div>
+
+      {/* Demo Services Modal */}
+      <DemoServices
+        isVisible={showDemoServices}
+        onClose={() => setShowDemoServices(false)}
+        cloudProvider={data.cloudProvider}
+        projectName={data.projectName}
+      />
     </div>
   );
 };

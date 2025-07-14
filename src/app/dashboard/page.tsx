@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { auth, isDemoMode } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
-import { LogOut, Plus, Server, Activity, Clock, User } from "lucide-react";
+import { LogOut, Plus, Server, Activity, Clock, User, Settings } from "lucide-react";
 import InfraTable from "@/components/InfraTable";
 
 export default function DashboardPage() {
@@ -126,13 +126,23 @@ export default function DashboardPage() {
                 Create and manage your cloud infrastructure deployments
               </p>
             </div>
-            <Button 
-              onClick={() => router.push("/create-infra")}
-              className="glass-button bg-cyan-500/20 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 hover:neon-glow"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Infrastructure
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => router.push("/cloud-config")}
+                variant="outline"
+                className="glass-button border-purple-500/30 text-purple-400 hover:bg-purple-500/20"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Configure Providers
+              </Button>
+              <Button 
+                onClick={() => router.push("/create-infra")}
+                className="glass-button bg-cyan-500/20 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/30 hover:neon-glow"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Infrastructure
+              </Button>
+            </div>
           </div>
         </div>
 

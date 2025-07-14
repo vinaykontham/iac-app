@@ -1,10 +1,11 @@
- "use client";
+"use client";
 
 import React, { useState } from "react";
 import { WizardData } from "../InfraWizard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, Server, Database, Container } from "lucide-react";
+import { ArrowLeft, ArrowRight, Server, Database, Container, AlertTriangle } from "lucide-react";
+import { isProviderConfigured } from "@/lib/cloudProviders";
 
 interface Props {
   data: WizardData;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const services = {
-  GCP: [
+  gcp: [
     {
       id: "compute-engine",
       name: "Compute Engine",
@@ -37,7 +38,7 @@ const services = {
       category: "Database",
     },
   ],
-  AWS: [
+  aws: [
     {
       id: "ec2",
       name: "Amazon EC2",
@@ -60,7 +61,7 @@ const services = {
       category: "Database",
     },
   ],
-  Azure: [
+  azure: [
     {
       id: "virtual-machines",
       name: "Virtual Machines",
@@ -143,60 +144,99 @@ const ServiceSelectionStep: React.FC<Props> = ({ data, updateData, nextStep, pre
         </p>
       </div>
 
+      {/* Credential Warning Banner */}
+      {data.cloudProvider && !isProviderConfigured(data.cloudProvider) && (
+        <div className="p-4 rounded-lg bg-yellow-500/20 border border-yellow-500/30 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-yellow-400 font-medium">Provider Not Configured</p>
+              <p className="text-yellow-300 text-sm mt-1">
+                Your {data.cloudProvider.toUpperCase()} credentials are not configured. Please visit the{" "}
+                <a 
+                  href="/cloud-config" 
+                  className="underline hover:text-yellow-200 transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Cloud Provider Configuration
+                </a>{" "}
+                page to set them up before deploying infrastructure.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Service Selection */}
       <div className="space-y-4">
-        <div className="grid gap-4">
-          {availableServices.map((service) => {
-            const IconComponent = service.icon;
-            return (
-              <Card
-                key={service.id}
-                className={`cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
-                  data.service === service.id
-                    ? `glass-card border-cyan-400 shadow-lg shadow-cyan-400/20 ${getCategoryAccent(service.category)}`
-                    : "glass-card border-white/20 hover:border-white/40"
-                }`}
-                onClick={() => handleServiceSelect(service.id)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getCategoryColor(
-                        service.category
-                      )} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300`}
-                    >
-                      <IconComponent className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-white text-lg group-hover:text-cyan-300 transition-colors">
-                          {service.name}
-                        </h4>
-                        <span className="px-3 py-1 text-xs rounded-full bg-gradient-to-r from-white/10 to-white/5 text-gray-300 border border-white/10">
-                          {service.category}
-                        </span>
+        {availableServices.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
+              <Server className="w-8 h-8 text-gray-400" />
+            </div>
+            <h4 className="text-lg font-semibold text-white mb-2">No Services Available</h4>
+            <p className="text-gray-400">
+              {data.cloudProvider 
+                ? `No services found for ${data.cloudProvider.toUpperCase()}. Please contact support.`
+                : "Please select a cloud provider first."
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {availableServices.map((service) => {
+              const IconComponent = service.icon;
+              return (
+                <Card
+                  key={service.id}
+                  className={`cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
+                    data.service === service.id
+                      ? `glass-card border-cyan-400 shadow-lg shadow-cyan-400/20 ${getCategoryAccent(service.category)}`
+                      : "glass-card border-white/20 hover:border-white/40"
+                  }`}
+                  onClick={() => handleServiceSelect(service.id)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getCategoryColor(
+                          service.category
+                        )} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300`}
+                      >
+                        <IconComponent className="w-7 h-7 text-white" />
                       </div>
-                      <p className="text-sm text-gray-400 leading-relaxed">{service.description}</p>
-                    </div>
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${
-                        data.service === service.id
-                          ? "border-cyan-400 bg-cyan-400 shadow-lg shadow-cyan-400/50"
-                          : "border-gray-400 group-hover:border-cyan-300"
-                      }`}
-                    >
-                      {data.service === service.id && (
-                        <div className="w-full h-full rounded-full bg-cyan-400 flex items-center justify-center">
-                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold text-white text-lg group-hover:text-cyan-300 transition-colors">
+                            {service.name}
+                          </h4>
+                          <span className="px-3 py-1 text-xs rounded-full bg-gradient-to-r from-white/10 to-white/5 text-gray-300 border border-white/10">
+                            {service.category}
+                          </span>
                         </div>
-                      )}
+                        <p className="text-sm text-gray-400 leading-relaxed">{service.description}</p>
+                      </div>
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${
+                          data.service === service.id
+                            ? "border-cyan-400 bg-cyan-400 shadow-lg shadow-cyan-400/50"
+                            : "border-gray-400 group-hover:border-cyan-300"
+                        }`}
+                      >
+                        {data.service === service.id && (
+                          <div className="w-full h-full rounded-full bg-cyan-400 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {error && (
